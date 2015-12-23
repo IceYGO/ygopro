@@ -62,6 +62,7 @@ bool Game::Initialize() {
 		return false;
 	if(!dataManager.LoadStrings("strings.conf"))
 		return false;
+	chest.LoadFromFile("chest.list");
 #ifdef _WIN32
 	char fpath[1000];
 	WIN32_FIND_DATAW fdataw;
@@ -918,9 +919,10 @@ void Game::ShowCardInfo(int code) {
 		memset(&cd, 0, sizeof(CardData));
 	imgCard->setImage(imageManager.GetTexture(code));
 	imgCard->setScaleImage(true);
-	if(cd.alias != 0 && (cd.alias - code < 10 || code - cd.alias < 10))
-		myswprintf(formatBuffer, L"%ls[%08d]", dataManager.GetName(cd.alias), cd.alias);
-	else myswprintf(formatBuffer, L"%ls[%08d]", dataManager.GetName(code), code);
+	int alias = cd.code;
+	if (cd.alias != 0 && (cd.alias - code < 10 || code - cd.alias < 10))
+		alias = cd.alias;
+	myswprintf(formatBuffer, L"%ls[%08d]", dataManager.GetName(alias), alias);
 	stName->setText(formatBuffer);
 	int offset = 0;
 	if(!mainGame->chkHideSetname->isChecked()) {
@@ -944,7 +946,7 @@ void Game::ShowCardInfo(int code) {
 		stInfo->setText(formatBuffer);
 		int form = 0x2605;
 		if(cd.type & TYPE_XYZ) ++form ;
-		myswprintf(formatBuffer, L"[%c%d] ",form,cd.level);
+		myswprintf(formatBuffer, L"[%c%d] ", form, cd.level);
 		wchar_t adBuffer[16];
 		if(cd.attack < 0 && cd.defence < 0)
 			myswprintf(adBuffer, L"?/?");
@@ -960,13 +962,23 @@ void Game::ShowCardInfo(int code) {
 			myswprintf(scaleBuffer, L"   %d/%d", cd.lscale, cd.rscale);
 			wcscat(formatBuffer, scaleBuffer);
 		}
+		if (!mainGame->chest.IsUnlimited()) {
+			std::wstring quantityBuffer(L" [Q: ");
+			quantityBuffer += std::to_wstring(mainGame->chest.GetCardAmount(alias));
+			quantityBuffer += L"]";
+			wcscat(formatBuffer, quantityBuffer.c_str());
+		}
 		stDataInfo->setText(formatBuffer);
 		stSetName->setRelativePosition(rect<s32>(15, 83, 296, 106));
 		s32 y = stSetName->getText()[0] == 0 ? 83 : 106;
 		stText->setRelativePosition(recti(15, y, 287 * window_size.Width / 1024, 324 * window_size.Height / 640));
 		scrCardText->setRelativePosition(recti(stInfo->getRelativePosition().getWidth() - 20, y, stInfo->getRelativePosition().getWidth(), 324 * window_size.Height / 640));
 	} else {
-		myswprintf(formatBuffer, L"[%ls]", dataManager.FormatType(cd.type));
+		if (!chest.IsUnlimited()) {
+			myswprintf(formatBuffer, L"[%ls] [Q: %d]", dataManager.FormatType(cd.type), chest.GetCardAmount(alias));
+		} else {
+			myswprintf(formatBuffer, L"[%ls]", dataManager.FormatType(cd.type));
+		}
 		stInfo->setText(formatBuffer);
 		stDataInfo->setText(L"");
 		stSetName->setRelativePosition(rect<s32>(15, 60, 296 * window_size.Width / 1024, 83 * window_size.Height / 640));
@@ -1089,6 +1101,7 @@ void Game::LoadSkin() {
 					if (!ss.fail()) {
 						stInfo->setOverrideColor(color_value);
 						stDataInfo->setOverrideColor(color_value);
+						stSetName->setOverrideColor(color_value);
 					}
 				}
 			}

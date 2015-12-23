@@ -966,6 +966,13 @@ void Game::DrawDeckBd() {
 				myswprintf(scaleBuffer, L" %d/%d", ptr->second.lscale, ptr->second.rscale);
 				wcscat(textBuffer, scaleBuffer);
 			}
+			if (!mainGame->chest.IsUnlimited()) {
+				int alias = (ptr->second.alias == 0) ? (ptr->first) : (ptr->second.alias);
+				std::wstring quantityBuffer(L" [Q: ");
+				quantityBuffer += std::to_wstring(mainGame->chest.GetCardAmount(alias));
+				quantityBuffer += L"]";
+				wcscat(textBuffer, quantityBuffer.c_str());
+			}
 			if((ptr->second.ot & 0x3) == 1)
 				wcscat(textBuffer, L" [OCG]");
 			else if((ptr->second.ot & 0x3) == 2)
@@ -982,6 +989,13 @@ void Game::DrawDeckBd() {
 			textFont->draw(ptype, recti(859, 186 + i * 66, 955, 207 + i * 66), 0xff000000, false, false);
 			textFont->draw(ptype, recti(860, 187 + i * 66, 955, 207 + i * 66), 0xffffffff, false, false);
 			textBuffer[0] = 0;
+			if (!mainGame->chest.IsUnlimited()) {
+				int alias = (ptr->second.alias == 0) ? (ptr->first) : (ptr->second.alias);
+				std::wstring quantityBuffer(L"[Q: ");
+				quantityBuffer += std::to_wstring(mainGame->chest.GetCardAmount(alias));
+				quantityBuffer += L"] ";
+				wcscat(textBuffer, quantityBuffer.c_str());
+			}
 			if((ptr->second.ot & 0x3) == 1)
 				wcscat(textBuffer, L"[OCG]");
 			else if((ptr->second.ot & 0x3) == 2)

@@ -5,6 +5,7 @@
 #include "client_field.h"
 #include "deck_con.h"
 #include "menu_handler.h"
+#include "chest.h"
 #include <unordered_map>
 #include <vector>
 #include <list>
@@ -133,6 +134,7 @@ public:
 	Signal closeDoneSignal;
 	Config gameConf;
 	DuelInfo dInfo;
+	Chest chest;
 
 	std::list<FadingUnit> fadingList;
 	std::vector<int> logParam;

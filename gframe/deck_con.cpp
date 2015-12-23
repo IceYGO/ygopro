@@ -343,6 +343,8 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				int limit = 3;
 				if(filterList->count(limitcode))
 					limit = (*filterList)[limitcode];
+				if (!mainGame->chest.IsUnlimited() && mainGame->chest.GetCardAmount(limitcode) < limit)
+					limit = mainGame->chest.GetCardAmount(limitcode);
 				for(size_t i = 0; i < deckManager.current_deck.main.size(); ++i)
 					if(deckManager.current_deck.main[i]->first == limitcode
 					        || deckManager.current_deck.main[i]->second.alias == limitcode)
@@ -510,6 +512,8 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 					int limit = 3;
 					if(filterList->count(limitcode))
 						limit = (*filterList)[limitcode];
+					if (!mainGame->chest.IsUnlimited() && mainGame->chest.GetCardAmount(limitcode) < limit)
+						limit = mainGame->chest.GetCardAmount(limitcode);
 					for(size_t i = 0; i < deckManager.current_deck.main.size(); ++i)
 						if(deckManager.current_deck.main[i]->first == limitcode
 						        || deckManager.current_deck.main[i]->second.alias == limitcode)
@@ -667,6 +671,9 @@ void DeckBuilder::FilterCards() {
 	for(code_pointer ptr = dataManager._datas.begin(); ptr != dataManager._datas.end(); ++ptr, ++strpointer) {
 		const CardDataC& data = ptr->second;
 		const CardString& text = strpointer->second;
+		int code = data.alias == 0 ? data.code : data.alias;
+		if (!mainGame->chest.ContainsCard(code))
+			continue;
 		if(data.type & TYPE_TOKEN)
 			continue;
 		switch(filter_type) {
