@@ -124,8 +124,9 @@ gui::CImageGUISkin* CGUISkinSystem::loadSkinFromFile(const c8 *skinname) {
 	loadProperty((core::stringw)L"Author",skin);
 	loadProperty((core::stringw)L"Version",skin);
 	loadProperty((core::stringw)L"Date",skin);
-	loadProperty((core::stringw)L"Desc",skin);
-	loadProperty((core::stringw)L"CardInfoHeaderColor",skin);
+	loadProperty((core::stringw)L"Desc", skin);
+	loadProperty((core::stringw)L"CardInfoHeaderColor", skin);
+	loadProperty((core::stringw)L"PopupColor", skin);
 	skin->loadConfig(skinConfig);
 	
 	tmp = registry->getValueAsCStr(L"texture",L"Skin/Properties/Font");

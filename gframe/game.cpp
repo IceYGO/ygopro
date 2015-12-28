@@ -1104,6 +1104,17 @@ void Game::LoadSkin() {
 						stSetName->setOverrideColor(color_value);
 					}
 				}
+				// Convert and apply popup color
+				stringw popup_color = skinSystem->getProperty(L"PopupColor");
+				if (!popup_color.empty()) {
+					unsigned int color_value;
+					std::wstringstream ss;
+					ss << std::hex << popup_color.c_str();
+					ss >> color_value;
+					if (!ss.fail()) {
+						stTip->setOverrideColor(color_value);
+					}
+				}
 			}
 		}
 	}
