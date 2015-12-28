@@ -1108,7 +1108,7 @@ bool ClientField::CheckSelectSum() {
 		selable.insert(selectsum_all[i]);
 	}
 	for(size_t i = 0; i < selected_cards.size(); ++i) {
-		if(i < must_select_count)
+		if((int)i < must_select_count)
 			selected_cards[i]->is_selectable = false;
 		else
 			selected_cards[i]->is_selectable = true;
@@ -1214,7 +1214,7 @@ bool ClientField::check_sel_sum_s(const std::set<ClientCard*>& left, int index, 
 	return res1 || res2;
 }
 void ClientField::check_sel_sum_t(const std::set<ClientCard*>& left, int acc) {
-	int count = selected_cards.size() + 1;
+	int count = selected_cards.size() + 1 - must_select_count;
 	for (auto sit = left.begin(); sit != left.end(); ++sit) {
 		if (selectsum_cards.find(*sit) != selectsum_cards.end())
 			continue;
