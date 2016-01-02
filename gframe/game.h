@@ -5,6 +5,7 @@
 #include "client_field.h"
 #include "deck_con.h"
 #include "menu_handler.h"
+#include "chest.h"
 #include <unordered_map>
 #include <vector>
 #include <list>
@@ -28,6 +29,14 @@ struct Config {
 	wchar_t textfont[256];
 	wchar_t numfont[256];
 	wchar_t roompass[30];
+	//settings
+	int chkAutoPos;
+	int chkRandomPos;
+	int chkAutoChain;
+	int chkWaitChain;
+	int chkIgnore1;
+	int chkIgnore2;
+	int chkHideSetname;
 };
 
 struct DuelInfo {
@@ -111,8 +120,9 @@ public:
 	recti Resize(s32 x, s32 y, s32 x2, s32 y2);
 	recti Resize(s32 x, s32 y, s32 x2, s32 y2, s32 dx, s32 dy, s32 dx2, s32 dy2);
 	position2di Resize(s32 x, s32 y, bool reverse = false);
-	recti ResizeWin(s32 x, s32 y, s32 x2, s32 y2, bool chat = false);
-	recti ResizeElem(s32 x, s32 y, s32 x2, s32 y2);
+	recti ResizeWindow(s32 x, s32 y, s32 x2, s32 y2);
+	recti ResizeChat(s32 x, s32 y, s32 x2, s32 y2);
+	recti ResizeGameElememt(s32 x, s32 y, s32 x2, s32 y2);
 
 	Mutex gMutex;
 	Mutex gBuffer;
@@ -124,6 +134,7 @@ public:
 	Signal closeDoneSignal;
 	Config gameConf;
 	DuelInfo dInfo;
+	Chest chest;
 
 	std::list<FadingUnit> fadingList;
 	std::vector<int> logParam;
@@ -188,12 +199,14 @@ public:
 	irr::gui::IGUIStaticText* stName;
 	irr::gui::IGUIStaticText* stInfo;
 	irr::gui::IGUIStaticText* stDataInfo;
+	irr::gui::IGUIStaticText* stSetName;
 	irr::gui::IGUIStaticText* stText;
 	irr::gui::IGUIScrollBar* scrCardText;
 	irr::gui::IGUICheckBox* chkAutoPos;
 	irr::gui::IGUICheckBox* chkRandomPos;
 	irr::gui::IGUICheckBox* chkAutoChain;
 	irr::gui::IGUICheckBox* chkWaitChain;
+	irr::gui::IGUICheckBox* chkHideSetname;
 	irr::gui::IGUIListBox* lstLog;
 	irr::gui::IGUIButton* btnClearLog;
 	irr::gui::IGUIButton* btnSaveLog;

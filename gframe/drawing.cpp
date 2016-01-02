@@ -552,7 +552,7 @@ void Game::DrawSpec() {
 		switch(showcard) {
 		case 1: {
 			driver->draw2DImage(imageManager.GetTexture(showcardcode), mainGame->Resize(574, 150));
-			driver->draw2DImage(imageManager.tMask, mainGame->ResizeElem(574, 150, 574 + (showcarddif > 177 ? 177 : showcarddif), 404),
+			driver->draw2DImage(imageManager.tMask, mainGame->ResizeGameElememt(574, 150, 574 + (showcarddif > 177 ? 177 : showcarddif), 404),
 			                    recti(254 - showcarddif, 0, 254 - (showcarddif > 177 ? showcarddif - 177 : 0), 254), 0, 0, true);
 			showcarddif += 15;
 			if(showcarddif >= 254) {
@@ -563,7 +563,7 @@ void Game::DrawSpec() {
 		}
 		case 2: {
 			driver->draw2DImage(imageManager.GetTexture(showcardcode), mainGame->Resize(574, 150));
-			driver->draw2DImage(imageManager.tMask, mainGame->ResizeElem(574 + showcarddif, 150, 761, 404), recti(0, 0, 177 - showcarddif, 254), 0, 0, true);
+			driver->draw2DImage(imageManager.tMask, mainGame->ResizeGameElememt(574 + showcarddif, 150, 761, 404), recti(0, 0, 177 - showcarddif, 254), 0, 0, true);
 			showcarddif += 15;
 			if(showcarddif >= 177) {
 				showcard = 0;
@@ -572,7 +572,7 @@ void Game::DrawSpec() {
 		}
 		case 3: {
 			driver->draw2DImage(imageManager.GetTexture(showcardcode), mainGame->Resize(574, 150));
-			driver->draw2DImage(imageManager.tNegated, mainGame->ResizeElem(536 + showcarddif, 141 + showcarddif, 793 - showcarddif, 397 - showcarddif), recti(0, 0, 128, 128), 0, 0, true);
+			driver->draw2DImage(imageManager.tNegated, mainGame->ResizeGameElememt(536 + showcarddif, 141 + showcarddif, 793 - showcarddif, 397 - showcarddif), recti(0, 0, 128, 128), 0, 0, true);
 			if(showcarddif < 64)
 				showcarddif += 4;
 			break;
@@ -582,7 +582,7 @@ void Game::DrawSpec() {
 			matManager.c2d[1] = (showcarddif << 24) | 0xffffff;
 			matManager.c2d[2] = (showcarddif << 24) | 0xffffff;
 			matManager.c2d[3] = (showcarddif << 24) | 0xffffff;
-			driver->draw2DImage(imageManager.GetTexture(showcardcode), mainGame->ResizeElem(574, 154, 751, 404),
+			driver->draw2DImage(imageManager.GetTexture(showcardcode), mainGame->ResizeGameElememt(574, 154, 751, 404),
 			                    recti(0, 0, 177, 254), 0, matManager.c2d, true);
 			if(showcarddif < 255)
 				showcarddif += 17;
@@ -593,7 +593,7 @@ void Game::DrawSpec() {
 			matManager.c2d[1] = (showcarddif << 25) | 0xffffff;
 			matManager.c2d[2] = (showcarddif << 25) | 0xffffff;
 			matManager.c2d[3] = (showcarddif << 25) | 0xffffff;
-			driver->draw2DImage(imageManager.GetTexture(showcardcode), mainGame->ResizeElem(662 - showcarddif * 0.69685f, 277 - showcarddif, 662 + showcarddif * 0.69685f, 277 + showcarddif),
+			driver->draw2DImage(imageManager.GetTexture(showcardcode), mainGame->ResizeGameElememt(662 - showcarddif * 0.69685f, 277 - showcarddif, 662 + showcarddif * 0.69685f, 277 + showcarddif),
 			                    recti(0, 0, 177, 254), 0, matManager.c2d, true);
 			if(showcarddif < 127)
 				showcarddif += 9;
@@ -601,7 +601,7 @@ void Game::DrawSpec() {
 		}
 		case 6: {
 			driver->draw2DImage(imageManager.GetTexture(showcardcode), mainGame->Resize(574, 150));
-			driver->draw2DImage(imageManager.tNumber, mainGame->ResizeElem(536 + showcarddif, 141 + showcarddif, 793 - showcarddif, 397 - showcarddif),
+			driver->draw2DImage(imageManager.tNumber, mainGame->ResizeGameElememt(536 + showcarddif, 141 + showcarddif, 793 - showcarddif, 397 - showcarddif),
 			                    recti((showcardp % 5) * 64, (showcardp / 5) * 64, (showcardp % 5 + 1) * 64, (showcardp / 5 + 1) * 64), 0, 0, true);
 			if(showcarddif < 64)
 				showcarddif += 4;
@@ -686,11 +686,11 @@ void Game::DrawSpec() {
 			auto pos = lpcFont->getDimension(lstr);
 			if(showcardp < 10) {
 				int alpha = (showcardp * 25) << 24;
-				lpcFont->draw(lstr, mainGame->ResizeElem(651 - pos.Width / 2 - (9 - showcardp) * 40, 291, 950, 370), alpha);
-				lpcFont->draw(lstr, mainGame->ResizeElem(650 - pos.Width / 2 - (9 - showcardp) * 40, 290, 950, 370), alpha | 0xffffff);
+				lpcFont->draw(lstr, mainGame->ResizeGameElememt(651 - pos.Width / 2 - (9 - showcardp) * 40, 291, 950, 370), alpha);
+				lpcFont->draw(lstr, mainGame->ResizeGameElememt(650 - pos.Width / 2 - (9 - showcardp) * 40, 290, 950, 370), alpha | 0xffffff);
 			} else if(showcardp < showcarddif) {
-				recti loc = mainGame->ResizeElem(650 - pos.Width / 2, 290, 950, 370);
-				lpcFont->draw(lstr, mainGame->ResizeElem(651 - pos.Width / 2, 291, 950, 370), 0xff000000);
+				recti loc = mainGame->ResizeGameElememt(650 - pos.Width / 2, 290, 950, 370);
+				lpcFont->draw(lstr, mainGame->ResizeGameElememt(651 - pos.Width / 2, 291, 950, 370), 0xff000000);
 				lpcFont->draw(lstr, loc, 0xffffffff);
 				if(dInfo.vic_string && (showcardcode == 1 || showcardcode == 2)) {
 					s32 vicX = (260 + pos.Width) / 2 - 260;
@@ -706,8 +706,8 @@ void Game::DrawSpec() {
 				}
 			} else if(showcardp < showcarddif + 10) {
 				int alpha = ((showcarddif + 10 - showcardp) * 25) << 24;
-				lpcFont->draw(lstr, mainGame->ResizeElem(651 - pos.Width / 2 + (showcardp - showcarddif) * 40, 291, 950, 370), alpha);
-				lpcFont->draw(lstr, mainGame->ResizeElem(650 - pos.Width / 2 + (showcardp - showcarddif) * 40, 290, 950, 370), alpha | 0xffffff);
+				lpcFont->draw(lstr, mainGame->ResizeGameElememt(651 - pos.Width / 2 + (showcardp - showcarddif) * 40, 291, 950, 370), alpha);
+				lpcFont->draw(lstr, mainGame->ResizeGameElememt(650 - pos.Width / 2 + (showcardp - showcarddif) * 40, 290, 950, 370), alpha | 0xffffff);
 			}
 			showcardp++;
 			break;
@@ -946,10 +946,12 @@ void Game::DrawDeckBd() {
 			driver->draw2DRectangle(0x80000000, mainGame->Resize(806, 164 + i * 66, 1019, 230 + i * 66));
 		DrawThumb(ptr, position2di(810, 165 + i * 66), deckBuilder.filterList);
 		if(ptr->second.type & TYPE_MONSTER) {
+			int form = 0x2605;
+			if(ptr->second.type & TYPE_XYZ) ++form;
 			myswprintf(textBuffer, L"%ls", dataManager.GetName(ptr->first));
 			textFont->draw(textBuffer, mainGame->Resize(859, 164 + i * 66, 955, 185 + i * 66), 0xff000000, false, false);
 			textFont->draw(textBuffer, mainGame->Resize(860, 165 + i * 66, 955, 185 + i * 66), 0xffffffff, false, false);
-			myswprintf(textBuffer, L"%ls/%ls \x2605%d", dataManager.FormatAttribute(ptr->second.attribute), dataManager.FormatRace(ptr->second.race), ptr->second.level);
+			myswprintf(textBuffer, L"%ls/%ls %c%d", dataManager.FormatAttribute(ptr->second.attribute), dataManager.FormatRace(ptr->second.race), form, ptr->second.level);
 			textFont->draw(textBuffer, mainGame->Resize(859, 186 + i * 66, 955, 207 + i * 66), 0xff000000, false, false);
 			textFont->draw(textBuffer, mainGame->Resize(860, 187 + i * 66, 955, 207 + i * 66), 0xffffffff, false, false);
 			if(ptr->second.attack < 0 && ptr->second.defence < 0)
@@ -964,10 +966,19 @@ void Game::DrawDeckBd() {
 				myswprintf(scaleBuffer, L" %d/%d", ptr->second.lscale, ptr->second.rscale);
 				wcscat(textBuffer, scaleBuffer);
 			}
+			if (!mainGame->chest.IsUnlimited()) {
+				int alias = (ptr->second.alias == 0) ? (ptr->first) : (ptr->second.alias);
+				std::wstring quantityBuffer(L" [Q: ");
+				quantityBuffer += std::to_wstring(mainGame->chest.GetCardAmount(alias));
+				quantityBuffer += L"]";
+				wcscat(textBuffer, quantityBuffer.c_str());
+			}
 			if((ptr->second.ot & 0x3) == 1)
 				wcscat(textBuffer, L" [OCG]");
 			else if((ptr->second.ot & 0x3) == 2)
 				wcscat(textBuffer, L" [TCG]");
+			else if((ptr->second.ot & 0x7) == 4)
+				wcscat(textBuffer, L" [Custom]");
 			textFont->draw(textBuffer, mainGame->Resize(859, 208 + i * 66, 955, 229 + i * 66), 0xff000000, false, false);
 			textFont->draw(textBuffer, mainGame->Resize(860, 209 + i * 66, 955, 229 + i * 66), 0xffffffff, false, false);
 		} else {
@@ -975,13 +986,22 @@ void Game::DrawDeckBd() {
 			textFont->draw(textBuffer, mainGame->Resize(859, 164 + i * 66, 955, 185 + i * 66), 0xff000000, false, false);
 			textFont->draw(textBuffer, mainGame->Resize(860, 165 + i * 66, 955, 185 + i * 66), 0xffffffff, false, false);
 			const wchar_t* ptype = dataManager.FormatType(ptr->second.type);
-			textFont->draw(ptype, recti(859, 186 + i * 66, 955, 207 + i * 66), 0xff000000, false, false);
-			textFont->draw(ptype, recti(860, 187 + i * 66, 955, 207 + i * 66), 0xffffffff, false, false);
+			textFont->draw(ptype, mainGame->Resize(859, 186 + i * 66, 955, 207 + i * 66), 0xff000000, false, false);
+			textFont->draw(ptype, mainGame->Resize(860, 187 + i * 66, 955, 207 + i * 66), 0xffffffff, false, false);
 			textBuffer[0] = 0;
+			if (!mainGame->chest.IsUnlimited()) {
+				int alias = (ptr->second.alias == 0) ? (ptr->first) : (ptr->second.alias);
+				std::wstring quantityBuffer(L"[Q: ");
+				quantityBuffer += std::to_wstring(mainGame->chest.GetCardAmount(alias));
+				quantityBuffer += L"] ";
+				wcscat(textBuffer, quantityBuffer.c_str());
+			}
 			if((ptr->second.ot & 0x3) == 1)
 				wcscat(textBuffer, L"[OCG]");
 			else if((ptr->second.ot & 0x3) == 2)
 				wcscat(textBuffer, L"[TCG]");
+			else if((ptr->second.ot & 0x7) == 4)
+				wcscat(textBuffer, L"[Custom]");
 			textFont->draw(textBuffer, mainGame->Resize(859, 208 + i * 66, 955, 229 + i * 66), 0xff000000, false, false);
 			textFont->draw(textBuffer, mainGame->Resize(860, 209 + i * 66, 955, 229 + i * 66), 0xffffffff, false, false);
 		}

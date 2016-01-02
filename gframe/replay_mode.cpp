@@ -16,7 +16,6 @@ bool ReplayMode::is_paused = false;
 bool ReplayMode::is_swaping = false;
 bool ReplayMode::exit_pending = false;
 int ReplayMode::skip_turn = 0;
-wchar_t ReplayMode::event_string[256];
 
 bool ReplayMode::StartReplay(int skipturn) {
 	skip_turn = skipturn;
@@ -86,25 +85,25 @@ int ReplayMode::ReplayThread(void* param) {
 	if(!(opt & DUEL_TAG_MODE)) {
 		int main = cur_replay.ReadInt32();
 		for(int i = 0; i < main; ++i)
-			new_card(pduel, cur_replay.ReadInt32(), 0, 0, LOCATION_DECK, 0, 0);
+			new_card(pduel, cur_replay.ReadInt32(), 0, 0, LOCATION_DECK, 0, POS_FACEDOWN_DEFENCE);
 		int extra = cur_replay.ReadInt32();
 		for(int i = 0; i < extra; ++i)
-			new_card(pduel, cur_replay.ReadInt32(), 0, 0, LOCATION_EXTRA, 0, 0);
+			new_card(pduel, cur_replay.ReadInt32(), 0, 0, LOCATION_EXTRA, 0, POS_FACEDOWN_DEFENCE);
 		mainGame->dField.Initial(0, main, extra);
 		main = cur_replay.ReadInt32();
 		for(int i = 0; i < main; ++i)
-			new_card(pduel, cur_replay.ReadInt32(), 1, 1, LOCATION_DECK, 0, 0);
+			new_card(pduel, cur_replay.ReadInt32(), 1, 1, LOCATION_DECK, 0, POS_FACEDOWN_DEFENCE);
 		extra = cur_replay.ReadInt32();
 		for(int i = 0; i < extra; ++i)
-			new_card(pduel, cur_replay.ReadInt32(), 1, 1, LOCATION_EXTRA, 0, 0);
+			new_card(pduel, cur_replay.ReadInt32(), 1, 1, LOCATION_EXTRA, 0, POS_FACEDOWN_DEFENCE);
 		mainGame->dField.Initial(1, main, extra);
 	} else {
 		int main = cur_replay.ReadInt32();
 		for(int i = 0; i < main; ++i)
-			new_card(pduel, cur_replay.ReadInt32(), 0, 0, LOCATION_DECK, 0, 0);
+			new_card(pduel, cur_replay.ReadInt32(), 0, 0, LOCATION_DECK, 0, POS_FACEDOWN_DEFENCE);
 		int extra = cur_replay.ReadInt32();
 		for(int i = 0; i < extra; ++i)
-			new_card(pduel, cur_replay.ReadInt32(), 0, 0, LOCATION_EXTRA, 0, 0);
+			new_card(pduel, cur_replay.ReadInt32(), 0, 0, LOCATION_EXTRA, 0, POS_FACEDOWN_DEFENCE);
 		mainGame->dField.Initial(0, main, extra);
 		main = cur_replay.ReadInt32();
 		for(int i = 0; i < main; ++i)
@@ -114,10 +113,10 @@ int ReplayMode::ReplayThread(void* param) {
 			new_tag_card(pduel, cur_replay.ReadInt32(), 0, LOCATION_EXTRA);
 		main = cur_replay.ReadInt32();
 		for(int i = 0; i < main; ++i)
-			new_card(pduel, cur_replay.ReadInt32(), 1, 1, LOCATION_DECK, 0, 0);
+			new_card(pduel, cur_replay.ReadInt32(), 1, 1, LOCATION_DECK, 0, POS_FACEDOWN_DEFENCE);
 		extra = cur_replay.ReadInt32();
 		for(int i = 0; i < extra; ++i)
-			new_card(pduel, cur_replay.ReadInt32(), 1, 1, LOCATION_EXTRA, 0, 0);
+			new_card(pduel, cur_replay.ReadInt32(), 1, 1, LOCATION_EXTRA, 0, POS_FACEDOWN_DEFENCE);
 		mainGame->dField.Initial(1, main, extra);
 		main = cur_replay.ReadInt32();
 		for(int i = 0; i < main; ++i)
@@ -308,6 +307,8 @@ bool ReplayMode::ReplayAnalyze(char* msg, unsigned int len) {
 			pbuf += 6;
 			count = BufferIO::ReadInt8(pbuf);
 			pbuf += count * 11;
+			count = BufferIO::ReadInt8(pbuf);
+			pbuf += count * 11;
 			return ReadReplayResponse();
 		}
 		case MSG_SORT_CARD:
@@ -384,7 +385,7 @@ bool ReplayMode::ReplayAnalyze(char* msg, unsigned int len) {
 			break;
 		}
 		case MSG_NEW_PHASE: {
-			pbuf++;
+			pbuf += 2;
 			DuelClient::ClientAnalyze(offset, pbuf - offset);
 			ReplayRefresh();
 			break;
@@ -634,6 +635,7 @@ bool ReplayMode::ReplayAnalyze(char* msg, unsigned int len) {
 		}
 		case MSG_ANNOUNCE_CARD: {
 			player = BufferIO::ReadInt8(pbuf);
+			pbuf += 4;
 			return ReadReplayResponse();
 		}
 		case MSG_ANNOUNCE_NUMBER: {

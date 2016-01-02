@@ -18,7 +18,7 @@
 #include <dirent.h>
 #endif
 
-const unsigned short PRO_VERSION = 0x1337;
+const unsigned short PRO_VERSION = 0x1338;
 
 namespace ygo {
 
@@ -50,6 +50,7 @@ bool Game::Initialize() {
 	is_building = false;
 	memset(&dInfo, 0, sizeof(DuelInfo));
 	memset(chatTiming, 0, sizeof(chatTiming));
+	showingtext = 0;
 	deckManager.LoadLFList();
 	driver = device->getVideoDriver();
 	driver->setTextureCreationFlag(irr::video::ETCF_CREATE_MIP_MAPS, false);
@@ -61,6 +62,7 @@ bool Game::Initialize() {
 		return false;
 	if(!dataManager.LoadStrings("strings.conf"))
 		return false;
+	chest.LoadFromFile("chest.list");
 #ifdef _WIN32
 	char fpath[1000];
 	WIN32_FIND_DATAW fdataw;
@@ -247,8 +249,10 @@ bool Game::Initialize() {
 	stInfo->setOverrideColor(SColor(255, 0, 0, 255));
 	stDataInfo = env->addStaticText(L"", rect<s32>(15, 60, 296, 83), false, true, tabInfo, -1, false);
 	stDataInfo->setOverrideColor(SColor(255, 0, 0, 255));
-	stText = env->addStaticText(L"", rect<s32>(15, 83, 287, 324), false, true, tabInfo, -1, false);
-	scrCardText = env->addScrollBar(false, rect<s32>(267, 83, 287, 324), tabInfo, SCROLL_CARDTEXT);
+	stSetName = env->addStaticText(L"", rect<s32>(15, 83, 296, 106), false, true, tabInfo, -1, false);
+	stSetName->setOverrideColor(SColor(255, 0, 0, 255));
+	stText = env->addStaticText(L"", rect<s32>(15, 106, 287, 324), false, true, tabInfo, -1, false);
+	scrCardText = env->addScrollBar(false, rect<s32>(267, 106, 287, 324), tabInfo, SCROLL_CARDTEXT);
 	scrCardText->setLargeStep(1);
 	scrCardText->setSmallStep(1);
 	scrCardText->setVisible(false);
@@ -260,13 +264,19 @@ bool Game::Initialize() {
 	//system
 	irr::gui::IGUITab* tabSystem = wInfos->addTab(dataManager.GetSysString(1273));
 	chkAutoPos = env->addCheckBox(false, rect<s32>(20, 20, 280, 45), tabSystem, -1, dataManager.GetSysString(1274));
-	chkAutoPos->setChecked(true);
+	chkAutoPos->setChecked(gameConf.chkAutoPos != 0);
 	chkRandomPos = env->addCheckBox(false, rect<s32>(40, 50, 300, 75), tabSystem, -1, dataManager.GetSysString(1275));
+	chkRandomPos->setChecked(gameConf.chkRandomPos != 0);
 	chkAutoChain = env->addCheckBox(false, rect<s32>(20, 80, 280, 105), tabSystem, -1, dataManager.GetSysString(1276));
+	chkAutoChain->setChecked(gameConf.chkAutoChain != 0);
 	chkWaitChain = env->addCheckBox(false, rect<s32>(20, 110, 280, 135), tabSystem, -1, dataManager.GetSysString(1277));
+	chkWaitChain->setChecked(gameConf.chkWaitChain != 0);
 	chkIgnore1 = env->addCheckBox(false, rect<s32>(20, 170, 280, 195), tabSystem, -1, dataManager.GetSysString(1290));
+	chkIgnore1->setChecked(gameConf.chkIgnore1 != 0);
 	chkIgnore2 = env->addCheckBox(false, rect<s32>(20, 200, 280, 225), tabSystem, -1, dataManager.GetSysString(1291));
-	chkIgnore2->setChecked(false);
+	chkIgnore2->setChecked(gameConf.chkIgnore2 != 0);
+	chkHideSetname = env->addCheckBox(false, rect<s32>(20, 260, 280, 285), tabSystem, -1, dataManager.GetSysString(1354));
+	chkHideSetname->setChecked(gameConf.chkHideSetname != 0);
 	//
 	wHand = env->addWindow(rect<s32>(500, 450, 825, 605), false, L"");
 	wHand->getCloseButton()->setVisible(false);
@@ -799,11 +809,12 @@ void Game::LoadConfig() {
 	std::memset(&gameConf, 0, sizeof Config);
 	gameConf.serverport = 7911;
 	gameConf.textfontsize = 12;
+	gameConf.chkAutoPos = 1;
 	fseek(fp, 0, SEEK_END);
 	int fsize = ftell(fp);
 	fseek(fp, 0, SEEK_SET);
 	while(ftell(fp) < fsize) {
-		fgets(linebuf, 250, fp);
+		fgets(linebuf, 256, fp);
 		sscanf(linebuf, "%s = %s", strbuf, valbuf);
 		if(!strcmp(strbuf, "antialias")) {
 			gameConf.antialias = atoi(valbuf);
@@ -835,15 +846,29 @@ void Game::LoadConfig() {
 		} else if(!strcmp(strbuf, "roompass")) {
 			BufferIO::DecodeUTF8(valbuf, wstr);
 			BufferIO::CopyWStr(wstr, gameConf.roompass, 30);
+		} else if(!strcmp(strbuf, "autopos")) {
+			gameConf.chkAutoPos = atoi(valbuf);
+		} else if(!strcmp(strbuf, "randompos")) {
+			gameConf.chkRandomPos = atoi(valbuf);
+		} else if(!strcmp(strbuf, "autochain")) {
+			gameConf.chkAutoChain = atoi(valbuf);
+		} else if(!strcmp(strbuf, "waitchain")) {
+			gameConf.chkWaitChain = atoi(valbuf);
+		} else if(!strcmp(strbuf, "ignore1")) {
+			gameConf.chkIgnore1 = atoi(valbuf);
+		} else if(!strcmp(strbuf, "ignore2")) {
+			gameConf.chkIgnore2 = atoi(valbuf);
+		} else if(!strcmp(strbuf, "hide_setname")) {
+			gameConf.chkHideSetname = atoi(valbuf);
 		} else {
 			// options allowing multiple words
-			sscanf(linebuf, "%s = %99[^\n]", strbuf, valbuf);
+			sscanf(linebuf, "%s = %240[^\n]", strbuf, valbuf);
 			if (!strcmp(strbuf, "nickname")) {
 				BufferIO::DecodeUTF8(valbuf, wstr);
 				BufferIO::CopyWStr(wstr, gameConf.nickname, 20);
 			} else if(!strcmp(strbuf, "gamename")) {
 				BufferIO::DecodeUTF8(valbuf, wstr);
-				BufferIO::CopyWStr(wstr, gameConf.gamename, 30);
+				BufferIO::CopyWStr(wstr, gameConf.gamename, 20);
 			} else if(!strcmp(strbuf, "lastdeck")) {
 				BufferIO::DecodeUTF8(valbuf, wstr);
 				BufferIO::CopyWStr(wstr, gameConf.lastdeck, 64);
@@ -877,6 +902,14 @@ void Game::SaveConfig() {
 	fprintf(fp, "lastip = %s\n", linebuf);
 	BufferIO::EncodeUTF8(gameConf.lastport, linebuf);
 	fprintf(fp, "lastport = %s\n", linebuf);
+	//settings
+	fprintf(fp, "autopos = %d\n", ((mainGame->chkAutoPos->isChecked()) ? 1 : 0));
+	fprintf(fp, "randompos = %d\n", ((mainGame->chkRandomPos->isChecked()) ? 1 : 0));
+	fprintf(fp, "autochain = %d\n", ((mainGame->chkAutoChain->isChecked()) ? 1 : 0));
+	fprintf(fp, "waitchain = %d\n", ((mainGame->chkWaitChain->isChecked()) ? 1 : 0));
+	fprintf(fp, "ignore1 = %d\n", ((mainGame->chkIgnore1->isChecked()) ? 1 : 0));
+	fprintf(fp, "ignore2 = %d\n", ((mainGame->chkIgnore2->isChecked()) ? 1 : 0));
+	fprintf(fp, "hide_setname = %d\n", ((mainGame->chkHideSetname->isChecked()) ? 1 : 0));
 	fclose(fp);
 }
 void Game::ShowCardInfo(int code) {
@@ -886,40 +919,72 @@ void Game::ShowCardInfo(int code) {
 		memset(&cd, 0, sizeof(CardData));
 	imgCard->setImage(imageManager.GetTexture(code));
 	imgCard->setScaleImage(true);
-	if(cd.alias != 0 && (cd.alias - code < 10 || code - cd.alias < 10))
-		myswprintf(formatBuffer, L"%ls[%08d]", dataManager.GetName(cd.alias), cd.alias);
-	else myswprintf(formatBuffer, L"%ls[%08d]", dataManager.GetName(code), code);
+	int alias = cd.code;
+	if (cd.alias != 0 && (cd.alias - code < 10 || code - cd.alias < 10))
+		alias = cd.alias;
+	myswprintf(formatBuffer, L"%ls[%08d]", dataManager.GetName(alias), alias);
 	stName->setText(formatBuffer);
+	int offset = 0;
+	if(!mainGame->chkHideSetname->isChecked()) {
+		unsigned long long sc = cd.setcode;
+		if(cd.alias) {
+			auto aptr = dataManager._datas.find(cd.alias);
+			if(aptr != dataManager._datas.end())
+				sc = aptr->second.setcode;
+		}
+		if(sc) {
+			offset = 23;
+			myswprintf(formatBuffer, L"%ls%ls", dataManager.GetSysString(1329), dataManager.FormatSetName(sc));
+			stSetName->setText(formatBuffer);
+		} else
+			stSetName->setText(L"");
+	} else {
+		stSetName->setText(L"");
+	}
 	if(cd.type & TYPE_MONSTER) {
 		myswprintf(formatBuffer, L"[%ls] %ls/%ls", dataManager.FormatType(cd.type), dataManager.FormatRace(cd.race), dataManager.FormatAttribute(cd.attribute));
 		stInfo->setText(formatBuffer);
-		formatBuffer[0] = L'[';
-		for(unsigned int i = 1; i <= cd.level; ++i)
-			formatBuffer[i] = 0x2605;
-		formatBuffer[cd.level + 1] = L']';
-		formatBuffer[cd.level + 2] = L' ';
+		int form = 0x2605;
+		if(cd.type & TYPE_XYZ) ++form ;
+		myswprintf(formatBuffer, L"[%c%d] ", form, cd.level);
+		wchar_t adBuffer[16];
 		if(cd.attack < 0 && cd.defence < 0)
-			myswprintf(&formatBuffer[cd.level + 3], L"?/?");
+			myswprintf(adBuffer, L"?/?");
 		else if(cd.attack < 0)
-			myswprintf(&formatBuffer[cd.level + 3], L"?/%d", cd.defence);
+			myswprintf(adBuffer, L"?/%d", cd.defence);
 		else if(cd.defence < 0)
-			myswprintf(&formatBuffer[cd.level + 3], L"%d/?", cd.attack);
+			myswprintf(adBuffer, L"%d/?", cd.attack);
 		else
-			myswprintf(&formatBuffer[cd.level + 3], L"%d/%d", cd.attack, cd.defence);
+			myswprintf(adBuffer, L"%d/%d", cd.attack, cd.defence);
+		wcscat(formatBuffer, adBuffer);
 		if(cd.type & TYPE_PENDULUM) {
 			wchar_t scaleBuffer[16];
 			myswprintf(scaleBuffer, L"   %d/%d", cd.lscale, cd.rscale);
 			wcscat(formatBuffer, scaleBuffer);
 		}
+		if (!mainGame->chest.IsUnlimited()) {
+			std::wstring quantityBuffer(L" [Q: ");
+			quantityBuffer += std::to_wstring(mainGame->chest.GetCardAmount(alias));
+			quantityBuffer += L"]";
+			wcscat(formatBuffer, quantityBuffer.c_str());
+		}
 		stDataInfo->setText(formatBuffer);
-		stText->setRelativePosition(recti(15, 83, 287 * window_size.Width / 1024 - 30, 324 * window_size.Height / 640));
-		scrCardText->setRelativePosition(recti(stInfo->getRelativePosition().getWidth() - 20, 83, stInfo->getRelativePosition().getWidth(), 324 * window_size.Height / 640));
+		stSetName->setRelativePosition(rect<s32>(15, 83, 296, 106));
+		s32 y = stSetName->getText()[0] == 0 ? 83 : 106;
+		stText->setRelativePosition(recti(15, y, 287 * window_size.Width / 1024, 324 * window_size.Height / 640));
+		scrCardText->setRelativePosition(recti(stInfo->getRelativePosition().getWidth() - 20, y, stInfo->getRelativePosition().getWidth(), 324 * window_size.Height / 640));
 	} else {
-		myswprintf(formatBuffer, L"[%ls]", dataManager.FormatType(cd.type));
+		if (!chest.IsUnlimited()) {
+			myswprintf(formatBuffer, L"[%ls] [Q: %d]", dataManager.FormatType(cd.type), chest.GetCardAmount(alias));
+		} else {
+			myswprintf(formatBuffer, L"[%ls]", dataManager.FormatType(cd.type));
+		}
 		stInfo->setText(formatBuffer);
 		stDataInfo->setText(L"");
-		stText->setRelativePosition(recti(15, 60, 287 * window_size.Width / 1024 - 30, 324 * window_size.Height / 640));
-		scrCardText->setRelativePosition(recti(stInfo->getRelativePosition().getWidth() - 20, 60, stInfo->getRelativePosition().getWidth(), 324 * window_size.Height / 640));
+		stSetName->setRelativePosition(rect<s32>(15, 60, 296 * window_size.Width / 1024, 83 * window_size.Height / 640));
+		s32 y = stSetName->getText()[0] == 0 ? 60 : 83;
+		stText->setRelativePosition(recti(15, y, 287 * window_size.Width / 1024, 324 * window_size.Height / 640));
+		scrCardText->setRelativePosition(recti(stInfo->getRelativePosition().getWidth() - 20, y, stInfo->getRelativePosition().getWidth(), 324 * window_size.Height / 640));
 	}
 	showingtext = dataManager.GetText(code);
 	const auto& tsize = stText->getRelativePosition();
@@ -1020,27 +1085,34 @@ const wchar_t* Game::LocalName(int local_player) {
 	return local_player == 0 ? dInfo.hostname : dInfo.clientname;
 }
 void Game::LoadSkin() {
-	if (gameConf.skin_index >= 0)
-	{
+	if (gameConf.skin_index >= 0) {
 		skinSystem = new CGUISkinSystem("skins", device);
 		core::array<core::stringw> skins = skinSystem->listSkins();
-		if ((size_t)gameConf.skin_index < skins.size())
-		{
+		if ((size_t)gameConf.skin_index < skins.size()) {
 			int index = skins.size() - gameConf.skin_index - 1; // reverse index
-			if (skinSystem->applySkin(skins[index].c_str()))
-			{
+			if (skinSystem->applySkin(skins[index].c_str())) {
 				// Convert and apply special color
 				stringw header_color = skinSystem->getProperty(L"CardInfoHeaderColor");
-				if (!header_color.empty())
-				{
+				if (!header_color.empty()) {
 					unsigned int color_value;
 					std::wstringstream ss;
 					ss << std::hex << header_color.c_str();
 					ss >> color_value;
-					if (!ss.fail())
-					{
+					if (!ss.fail()) {
 						stInfo->setOverrideColor(color_value);
 						stDataInfo->setOverrideColor(color_value);
+						stSetName->setOverrideColor(color_value);
+					}
+				}
+				// Convert and apply popup color
+				stringw popup_color = skinSystem->getProperty(L"PopupColor");
+				if (!popup_color.empty()) {
+					unsigned int color_value;
+					std::wstringstream ss;
+					ss << std::hex << popup_color.c_str();
+					ss >> color_value;
+					if (!ss.fail()) {
+						stTip->setOverrideColor(color_value);
 					}
 				}
 			}
@@ -1049,28 +1121,28 @@ void Game::LoadSkin() {
 }
 void Game::OnResize()
 {
-	wMainMenu->setRelativePosition(ResizeWin(370, 200, 650, 415));
-	wLanWindow->setRelativePosition(ResizeWin(220, 100, 800, 520));
-	wCreateHost->setRelativePosition(ResizeWin(320, 100, 700, 520));
-	wHostPrepare->setRelativePosition(ResizeWin(270, 120, 750 + 50, 440));
-	wReplay->setRelativePosition(ResizeWin(220, 100, 800, 520));
-	wSinglePlay->setRelativePosition(ResizeWin(220, 100, 800, 520));
-	wHand->setRelativePosition(ResizeWin(500, 450, 825, 605));
-	wFTSelect->setRelativePosition(ResizeWin(550, 240, 780, 340));
-	wMessage->setRelativePosition(ResizeWin(490, 200, 840, 340));
-	wACMessage->setRelativePosition(ResizeWin(490, 240, 840, 300));
-	wQuery->setRelativePosition(ResizeWin(490, 200, 840, 340));
-	wOptions->setRelativePosition(ResizeWin(490, 200, 840, 340));
-	wPosSelect->setRelativePosition(ResizeWin(340, 200, 935, 410));
-	wCardSelect->setRelativePosition(ResizeWin(320, 100, 1000, 400));
-	wANNumber->setRelativePosition(ResizeWin(550, 200, 780, 295));
-	wANCard->setRelativePosition(ResizeWin(560, 170, 770, 370));
-	wANAttribute->setRelativePosition(ResizeWin(500, 200, 830, 285));
-	wANRace->setRelativePosition(ResizeWin(480, 200, 850, 385));
-	wReplaySave->setRelativePosition(ResizeWin(510, 200, 820, 320));
-	stHintMsg->setRelativePosition(ResizeWin(500, 60, 820, 90));
+	wMainMenu->setRelativePosition(ResizeWindow(370, 200, 650, 415));
+	wLanWindow->setRelativePosition(ResizeWindow(220, 100, 800, 520));
+	wCreateHost->setRelativePosition(ResizeWindow(320, 100, 700, 520));
+	wHostPrepare->setRelativePosition(ResizeWindow(270, 120, 750 + 50, 440));
+	wReplay->setRelativePosition(ResizeWindow(220, 100, 800, 520));
+	wSinglePlay->setRelativePosition(ResizeWindow(220, 100, 800, 520));
+	wHand->setRelativePosition(ResizeWindow(500, 450, 825, 605));
+	wFTSelect->setRelativePosition(ResizeWindow(550, 240, 780, 340));
+	wMessage->setRelativePosition(ResizeWindow(490, 200, 840, 340));
+	wACMessage->setRelativePosition(ResizeWindow(490, 240, 840, 300));
+	wQuery->setRelativePosition(ResizeWindow(490, 200, 840, 340));
+	wOptions->setRelativePosition(ResizeWindow(490, 200, 840, 340));
+	wPosSelect->setRelativePosition(ResizeWindow(340, 200, 935, 410));
+	wCardSelect->setRelativePosition(ResizeWindow(320, 100, 1000, 400));
+	wANNumber->setRelativePosition(ResizeWindow(550, 200, 780, 295));
+	wANCard->setRelativePosition(ResizeWindow(560, 170, 770, 370));
+	wANAttribute->setRelativePosition(ResizeWindow(500, 200, 830, 285));
+	wANRace->setRelativePosition(ResizeWindow(480, 200, 850, 385));
+	wReplaySave->setRelativePosition(ResizeWindow(510, 200, 820, 320));
+	stHintMsg->setRelativePosition(ResizeWindow(500, 60, 820, 90));
 
-	wChat->setRelativePosition(ResizeWin(305, 615, 1020, 640, true));
+	wChat->setRelativePosition(ResizeChat(305, 615, 1020, 640));
 	ebChatInput->setRelativePosition(recti(3, 2, window_size.Width - wChat->getRelativePosition().UpperLeftCorner.X - 6, 22));
 
 	wCardImg->setRelativePosition(Resize(1, 1, 199, 273));
@@ -1084,7 +1156,9 @@ void Game::OnResize()
 	lstLog->setRelativePosition(Resize(10, 10, 290, 290));
 	btnClearLog->setRelativePosition(Resize(160, 300, 260, 325));
 
-	InitStaticText(stText, stText->getRelativePosition().getWidth(), stText->getRelativePosition().getHeight(), textFont, showingtext);
+	if (showingtext != 0) {
+		InitStaticText(stText, stText->getRelativePosition().getWidth(), stText->getRelativePosition().getHeight(), textFont, showingtext);
+	}
 
 	btnLeaveGame->setRelativePosition(Resize(205, 5, 295, 80));
 	wReplayControl->setRelativePosition(Resize(205, 143, 295, 273));
@@ -1119,16 +1193,16 @@ void Game::OnResize()
 	btnEffectFilter->setRelativePosition(Resize(345, 28, 390, 69));
 	btnStartFilter->setRelativePosition(Resize(260, 96, 390, 118));
 
-	stBanlist->setRelativePosition(ResizeWin(10, 9, 100, 29));
-	stDeck->setRelativePosition(ResizeWin(10, 39, 100, 59));
-	stCategory->setRelativePosition(ResizeWin(10, 5, 70, 25));
-	stLimit->setRelativePosition(ResizeWin(205, 5, 280, 25));
-	stAttribute->setRelativePosition(ResizeWin(10, 28, 70, 48));
-	stType->setRelativePosition(ResizeWin(10, 51, 70, 71));
-	stAtk->setRelativePosition(ResizeWin(205, 28, 280, 48));
-	stDef->setRelativePosition(ResizeWin(205, 51, 280, 71));
-	stLevel->setRelativePosition(ResizeWin(10, 74, 80, 94));
-	stSearch->setRelativePosition(ResizeWin(205, 74, 280, 94));
+	stBanlist->setRelativePosition(ResizeWindow(10, 9, 100, 29));
+	stDeck->setRelativePosition(ResizeWindow(10, 39, 100, 59));
+	stCategory->setRelativePosition(ResizeWindow(10, 5, 70, 25));
+	stLimit->setRelativePosition(ResizeWindow(205, 5, 280, 25));
+	stAttribute->setRelativePosition(ResizeWindow(10, 28, 70, 48));
+	stType->setRelativePosition(ResizeWindow(10, 51, 70, 71));
+	stAtk->setRelativePosition(ResizeWindow(205, 28, 280, 48));
+	stDef->setRelativePosition(ResizeWindow(205, 51, 280, 71));
+	stLevel->setRelativePosition(ResizeWindow(10, 74, 80, 94));
+	stSearch->setRelativePosition(ResizeWindow(205, 74, 280, 94));
 
 	btnSideOK->setRelativePosition(Resize(510, 40, 820, 80));
 
@@ -1159,36 +1233,35 @@ recti Game::Resize(s32 x, s32 y, s32 x2, s32 y2, s32 dx, s32 dy, s32 dx2, s32 dy
 }
 position2di Game::Resize(s32 x, s32 y, bool reverse)
 {
-	if (reverse)
-	{
+	if (reverse) {
 		x = x * 1024 / window_size.Width;
 		y = y * 640 / window_size.Height;
-	}
-	else
-	{
+	} else {
 		x = x * window_size.Width / 1024;
 		y = y * window_size.Height / 640;
 	}
 	return position2di(x, y);
 }
-recti Game::ResizeWin(s32 x, s32 y, s32 x2, s32 y2, bool chat)
+recti Game::ResizeWindow(s32 x, s32 y, s32 x2, s32 y2)
 {
 	s32 sx = x2 - x;
 	s32 sy = y2 - y;
-	if (chat)
-	{
-		y = window_size.Height - sy;
-		x2 = window_size.Width;
-		y2 = y + sy;
-		return recti(x, y, x2, y2);
-	}
 	x = (x + sx / 2) * window_size.Width / 1024 - sx / 2;
 	y = (y + sy / 2) * window_size.Height / 640 - sy / 2;
 	x2 = sx + x;
 	y2 = sy + y;
 	return recti(x, y, x2, y2);
 }
-recti Game::ResizeElem(s32 x, s32 y, s32 x2, s32 y2)
+recti Game::ResizeChat(s32 x, s32 y, s32 x2, s32 y2)
+{
+	s32 sx = x2 - x;
+	s32 sy = y2 - y;
+	y = window_size.Height - sy;
+	x2 = window_size.Width;
+	y2 = y + sy;
+	return recti(x, y, x2, y2);
+}
+recti Game::ResizeGameElememt(s32 x, s32 y, s32 x2, s32 y2)
 {
 	s32 sx = x2 - x;
 	s32 sy = y2 - y;
