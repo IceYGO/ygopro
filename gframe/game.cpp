@@ -552,6 +552,9 @@ bool Game::Initialize() {
 		env->getSkin()->setColor((EGUI_DEFAULT_COLOR)i, col);
 	}
 	LoadSkin();
+	engineSound = irrklang::createIrrKlangDevice();
+	engineMusic = irrklang::createIrrKlangDevice();
+
 	hideChat = false;
 	hideChatTimer = 0;
 	return true;
@@ -740,6 +743,26 @@ void Game::RefreshDeck(irr::gui::IGUIComboBox* cbDeck) {
 		}
 	}
 }
+
+void Game::PlayMusic(char* song, bool loop) {
+	if (gameConf.enablemusic) {
+		if (!engineMusic->isCurrentlyPlaying(song)) {
+			engineMusic->stopAllSounds();
+			engineMusic->play2D(song, loop);
+			
+		}
+		
+	}
+	
+}
+void Game::PlaySound(char* sound) {
+	if (gameConf.enablesound) {
+		engineSound->play2D(sound);
+		
+	}
+	
+}
+
 void Game::RefreshReplay() {
 	lstReplayList->clear();
 #ifdef _WIN32
@@ -858,8 +881,10 @@ void Game::LoadConfig() {
 			gameConf.chkIgnore1 = atoi(valbuf);
 		} else if(!strcmp(strbuf, "ignore2")) {
 			gameConf.chkIgnore2 = atoi(valbuf);
-		} else if(!strcmp(strbuf, "hide_setname")) {
+		} else if (!strcmp(strbuf, "hide_setname")) {
 			gameConf.chkHideSetname = atoi(valbuf);
+		} else if (!strcmp(strbuf, "enable_music")) {
+			gameConf.enablemusic = atoi(valbuf) > 0;
 		} else {
 			// options allowing multiple words
 			sscanf(linebuf, "%s = %240[^\n]", strbuf, valbuf);
