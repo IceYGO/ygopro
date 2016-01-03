@@ -299,7 +299,7 @@ void DuelClient::HandleSTOCPacketLan(char* data, unsigned int len) {
 		break;
 	}
 	case STOC_JOIN_GAME: {
-		mainGame->PlaySound("./sound/playerenter.wav");
+		mainGame->PlaySounds("./sound/playerenter.wav");
 		STOC_JoinGame* pkt = (STOC_JoinGame*)pdata;
 		std::wstring str;
 		wchar_t msgbuf[256];
@@ -376,7 +376,7 @@ void DuelClient::HandleSTOCPacketLan(char* data, unsigned int len) {
 		break;
 	}
 	case STOC_TYPE_CHANGE: {
-		mainGame->PlaySound("./sound/playerchange.wav");
+		mainGame->PlaySounds("./sound/playerchange.wav");
 		STOC_TypeChange* pkt = (STOC_TypeChange*)pdata;
 		if(!mainGame->dInfo.isTag) {
 			selftype = pkt->type & 0xf;
@@ -432,7 +432,7 @@ void DuelClient::HandleSTOCPacketLan(char* data, unsigned int len) {
 		break;
 	}
 	case STOC_DUEL_START: {
-		mainGame->PlaySound("./sound/start.wav");
+		mainGame->PlaySounds("./sound/start.wav");
 		mainGame->HideElement(mainGame->wHostPrepare);
 		mainGame->WaitFrameSignal(11);
 		mainGame->gMutex.Lock();
@@ -554,7 +554,7 @@ void DuelClient::HandleSTOCPacketLan(char* data, unsigned int len) {
 		break;
 	}
 	case STOC_CHAT: {
-		mainGame->PlaySound("./sound/chat.wav");
+		mainGame->PlaySounds("./sound/chat.wav");
 		STOC_Chat* pkt = (STOC_Chat*)pdata;
 		int player = pkt->player;
 		if(player < 4) {
@@ -596,7 +596,7 @@ void DuelClient::HandleSTOCPacketLan(char* data, unsigned int len) {
 		break;
 	}
 	case STOC_HS_PLAYER_ENTER: {
-		mainGame->PlaySound("./sound/playerenter.wav");
+		mainGame->PlaySounds("./sound/playerenter.wav");
 		STOC_HS_PlayerEnter* pkt = (STOC_HS_PlayerEnter*)pdata;
 		if(pkt->pos > 3)
 			break;

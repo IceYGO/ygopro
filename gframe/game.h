@@ -112,7 +112,7 @@ public:
 	void CloseDuelWindow();
 	void LoadSkin();
 	void PlayMusic(char* song, bool loop);
-	void PlaySound(char* sound);
+	void PlaySounds(char* sound);
 
 	int LocalPlayer(int player);
 	const wchar_t* LocalName(int local_player);
