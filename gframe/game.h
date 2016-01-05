@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <vector>
 #include <list>
+#include <irrKlang.h>
 
 class CGUISkinSystem;
 
@@ -37,6 +38,8 @@ struct Config {
 	int chkIgnore1;
 	int chkIgnore2;
 	int chkHideSetname;
+	bool enablemusic;
+	bool enablesound;
 };
 
 struct DuelInfo {
@@ -62,6 +65,7 @@ struct DuelInfo {
 	unsigned char time_player;
 	unsigned short time_limit;
 	unsigned short time_left[2];
+
 };
 
 struct FadingUnit {
@@ -107,6 +111,8 @@ public:
 	void ClearTextures();
 	void CloseDuelWindow();
 	void LoadSkin();
+	void PlayMusic(char* song, bool loop);
+	void PlaySounds(char* sound);
 
 	int LocalPlayer(int player);
 	const wchar_t* LocalName(int local_player);
@@ -409,6 +415,10 @@ public:
 	irr::gui::IGUIButton* btnLeaveGame;
 
 	CGUISkinSystem* skinSystem;
+
+	//soundEngine
+	irrklang::ISoundEngine* engineSound;
+	irrklang::ISoundEngine* engineMusic;
 };
 
 extern Game* mainGame;
