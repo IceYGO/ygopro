@@ -48,7 +48,17 @@ solution "ygo"
         flags { "OptimizeSpeed" }
         targetdir "bin/release"
 
-    include "ocgcore"
+    project "ocgcore"
+        kind "StaticLib"
+
+        files { "ocgcore/**.cpp", "ocgcore/**.h" }
+        configuration "windows"
+            includedirs { "." }
+        configuration "not vs*"
+            buildoptions { "-std=gnu++0x" }
+        configuration "not windows"
+            includedirs { "/usr/include/lua", "/usr/include/lua5.2", "/usr/include/lua/5.2" }
+
     include "gframe"
     if os.is("windows") then
     include "event"
