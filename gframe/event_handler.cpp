@@ -577,9 +577,16 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 					command_card = selectable_cards[id - BUTTON_CARD_0 + mainGame->scrCardList->getPos() / 10];
 					selected_cards.push_back(command_card);
 					if (CheckSelectSum()) {
-						SetResponseSelectedCards();
-						mainGame->HideElement(mainGame->wCardSelect, true);
+						if(selectsum_cards.size() == 0 || selectable_cards.size() == 0) {
+							SetResponseSelectedCards();
+							mainGame->HideElement(mainGame->wCardSelect, true);
+						} else {
+							select_ready = true;
+							mainGame->wCardSelect->setVisible(false);
+							mainGame->dField.ShowSelectCard(true);
+						}
 					} else {
+						select_ready = false;
 						mainGame->wCardSelect->setVisible(false);
 						mainGame->dField.ShowSelectCard();
 					}
@@ -628,7 +635,7 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 					mainGame->HideElement(mainGame->wCardSelect);
 					break;
 				}
-				if(mainGame->dInfo.curMsg == MSG_SELECT_CARD) {
+				if(mainGame->dInfo.curMsg == MSG_SELECT_CARD || mainGame->dInfo.curMsg == MSG_SELECT_SUM) {
 					if(select_ready) {
 						SetResponseSelectedCards();
 						mainGame->HideElement(mainGame->wCardSelect, true);
@@ -887,6 +894,8 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 			irr::core::position2di pos(x, y);
 			if(x < 300)
 				break;
+			if(mainGame->gameConf.control_mode == 1)
+				mainGame->always_chain = event.MouseInput.isLeftPressed();
 			if(mainGame->wCmdMenu->isVisible() && !mainGame->wCmdMenu->getRelativePosition().isPointInside(mousepos))
 				mainGame->wCmdMenu->setVisible(false);
 			if(panel && panel->isVisible())
@@ -1234,6 +1243,8 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 		case irr::EMIE_RMOUSE_LEFT_UP: {
 			if(mainGame->dInfo.isReplay)
 				break;
+			if(mainGame->gameConf.control_mode == 1 && event.MouseInput.X > 300)
+				mainGame->ignore_chain = event.MouseInput.isRightPressed();
 			mainGame->wCmdMenu->setVisible(false);
 			if(mainGame->fadingList.size())
 				break;
@@ -1528,6 +1539,20 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 		case irr::EMIE_MOUSE_WHEEL: {
 			break;
 		}
+		case irr::EMIE_LMOUSE_PRESSED_DOWN: {
+			if(!mainGame->dInfo.isStarted)
+				break;
+			if(mainGame->gameConf.control_mode == 1 && event.MouseInput.X > 300)
+				mainGame->always_chain = event.MouseInput.isLeftPressed();
+			break;
+		}
+		case irr::EMIE_RMOUSE_PRESSED_DOWN: {
+			if(!mainGame->dInfo.isStarted)
+				break;
+			if(mainGame->gameConf.control_mode == 1 && event.MouseInput.X > 300)
+				mainGame->ignore_chain = event.MouseInput.isRightPressed();
+			break; 
+		}
 		default:
 			break;
 		}
@@ -1536,15 +1561,18 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 	case irr::EET_KEY_INPUT_EVENT: {
 		switch(event.KeyInput.Key) {
 		case irr::KEY_KEY_A: {
-			mainGame->always_chain = event.KeyInput.PressedDown;
+			if(mainGame->gameConf.control_mode == 0)
+				mainGame->always_chain = event.KeyInput.PressedDown;
 			break;
 		}
 		case irr::KEY_KEY_S: {
-			mainGame->ignore_chain = event.KeyInput.PressedDown;
+			if(mainGame->gameConf.control_mode == 0)
+				mainGame->ignore_chain = event.KeyInput.PressedDown;
 			break;
 		}
 		case irr::KEY_KEY_R: {
-			if(!event.KeyInput.PressedDown && !mainGame->HasFocus(EGUIET_EDIT_BOX))
+			if(mainGame->gameConf.control_mode == 0
+				&& !event.KeyInput.PressedDown && !mainGame->HasFocus(EGUIET_EDIT_BOX))
 				mainGame->textFont->setTransparency(true);
 			break;
 		}
@@ -1616,6 +1644,12 @@ bool ClientField::OnEvent(const irr::SEvent& event) {
 					ShowLocationCard();
 				}
 			}
+			break;
+		}
+		case irr::KEY_F9: {
+			if(mainGame->gameConf.control_mode == 1
+				&& !event.KeyInput.PressedDown && !mainGame->HasFocus(EGUIET_EDIT_BOX))
+				mainGame->textFont->setTransparency(true);
 			break;
 		}
 		case irr::KEY_ESCAPE: {
